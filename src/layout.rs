@@ -1,10 +1,11 @@
-use std::collections::HashSet;
-use crypto::Money;
 use cell::LayoutCell;
+use crypto::Money;
 use currency;
 use currency::Currency;
+use std::collections::HashSet;
 
-use prettytable::{Table, Row};
+use prettytable::format;
+use prettytable::{Row, Table};
 
 pub struct Layout<'a> {
     headers: Vec<String>,
@@ -27,9 +28,10 @@ impl<'a> Layout<'a> {
             "coin",
             &format!("price ({})", currency.get_symbol()),
             "change (24h)",
-            "change(1h)",
+            "change (1h)",
             &format!("market cap ({})", currency.get_symbol()),
-        ].iter()
+        ]
+            .iter()
             .map(|item| item.to_uppercase())
             .collect::<Vec<String>>();
 
@@ -49,12 +51,32 @@ impl<'a> Layout<'a> {
         let mut table = Table::new();
         let mut cell = LayoutCell::new();
 
-        let headers = self.headers
+        let format = format::FormatBuilder::new()
+            .column_separator('│')
+            .borders('┃')
+            .separator(
+                format::LinePosition::Top,
+                format::LineSeparator::new('━', '┯', '┏', '┓'),
+            ).separator(
+                format::LinePosition::Bottom,
+                format::LineSeparator::new('━', '┷', '┗', '┛'),
+            ).separator(
+                format::LinePosition::Intern,
+                format::LineSeparator::new('─', '┼', '┠', '┨'),
+            ).separator(
+                format::LinePosition::Title,
+                format::LineSeparator::new('━', '┿', '┣', '┫'),
+            ).padding(1, 1)
+            .build();
+        table.set_format(format);
+
+        let headers = self
+            .headers
             .iter()
             .map(|header| cell.set(header).bold().yellow().build())
             .collect();
 
-        table.add_row(Row::new(headers));
+        table.set_titles(Row::new(headers));
 
         for item in &self.data {
             if !&self.filter_list.is_empty()
